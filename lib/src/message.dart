@@ -1000,7 +1000,7 @@ void kRegisterFluirMessage() {
 void kRegisterMessageFactory<T extends Message>(FromJsonFun<T> fun) {
   // eliminate generic value type string
   final typeName = switch (T) {
-    ValueViewChanged => 'ValueViewChanged',
+    ValueViewChanged _ => 'ValueViewChanged',
     _ => T.toString(),
   };
 

@@ -1,5 +1,3 @@
-library horda_core;
-
 export 'src/error.dart';
 export 'src/json.dart';
 export 'src/message.dart';
