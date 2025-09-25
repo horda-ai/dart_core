@@ -1,3 +1,9 @@
+## 0.14.0
+
+ - **FEAT**: add entityName to QueryDef and QueryDefBuilder.
+ - **FEAT**: add entityName and subKey to ActorViewSub.
+ - **FEAT**: add entityName to ChangeEnvelop.
+
 ## 0.13.2
 
  - **FIX**: fix ValueViewChanged not being matched when registering factory

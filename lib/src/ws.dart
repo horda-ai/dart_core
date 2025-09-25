@@ -200,7 +200,11 @@ class QueryResultWsMsg implements WsMessage {
 
 @JsonSerializable()
 class ActorViewSub {
-  ActorViewSub(this.id, this.name, this.changeId);
+  ActorViewSub(this.entityName, this.id, this.name, this.changeId);
+
+  ActorViewSub.attr(this.id, this.name, this.changeId) : entityName = '';
+
+  final String entityName;
 
   /// actor id or attribute id
   @JsonKey(name: 'id')
@@ -212,6 +216,14 @@ class ActorViewSub {
 
   @JsonKey(name: 'ver')
   final String changeId;
+
+  String get subKey {
+    if (entityName.isEmpty) {
+      return '$id/$name';
+    }
+
+    return '$entityName/$id/$name';
+  }
 
   factory ActorViewSub.fromJson(Map<String, dynamic> json) =>
       _$ActorViewSubFromJson(json);

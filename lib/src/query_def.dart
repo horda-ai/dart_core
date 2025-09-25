@@ -6,15 +6,27 @@ import 'error.dart';
 /// request specific data projections with optional real-time subscriptions.
 class QueryDef {
   /// Creates a query definition with the specified view queries.
-  QueryDef(this.views);
+  QueryDef(this.entityName, this.views);
+
+  final String entityName;
 
   /// Map of view names to their query definitions.
   final Map<String, ViewQueryDef> views;
 
   factory QueryDef.fromJson(Map<String, dynamic> json) {
+    final entityName = json['entityName'] as String?;
+
+    if (entityName == null) {
+      throw FluirError(
+        'entity name is null when deserializing a query def json',
+      );
+    }
+
+    final viewsJson = json['views'] as Map<String, dynamic>;
+
     var views = <String, ViewQueryDef>{};
 
-    for (var entry in json.entries) {
+    for (var entry in viewsJson.entries) {
       var type = entry.value['type'];
       switch (type) {
         case 'val':
@@ -34,17 +46,20 @@ class QueryDef {
       }
     }
 
-    return QueryDef(views);
+    return QueryDef(entityName, views);
   }
 
   Map<String, dynamic> toJson() {
-    var json = <String, dynamic>{};
+    final viewsJson = <String, dynamic>{};
 
     for (var entry in views.entries) {
-      json[entry.key] = entry.value.toJson();
+      viewsJson[entry.key] = entry.value.toJson();
     }
 
-    return json;
+    return {
+      'entityName': entityName,
+      'views': viewsJson,
+    };
   }
 }
 
@@ -198,6 +213,10 @@ class ListQueryDef extends ViewQueryDef {
 /// Provides a fluent interface for building complex queries with
 /// multiple view definitions and nested relationships.
 class QueryDefBuilder {
+  QueryDefBuilder(this.entityName);
+
+  final String entityName;
+
   /// Adds a view query builder to this query definition.
   void add(ViewQueryDefBuilder qb) {
     _queryViewBuilders.add(qb);
@@ -211,7 +230,7 @@ class QueryDefBuilder {
       subqueryViews[b.name] = b.build();
     }
 
-    return QueryDef(subqueryViews);
+    return QueryDef(entityName, subqueryViews);
   }
 
   final _queryViewBuilders = <ViewQueryDefBuilder>[];
@@ -253,7 +272,14 @@ class ValueQueryDefBuilder extends ViewQueryDefBuilder {
 /// Constructs queries for entity references with nested queries and attributes.
 class RefQueryDefBuilder extends ViewQueryDefBuilder {
   /// Creates a reference query builder with attribute list.
-  RefQueryDefBuilder(super.name, this.attrs, {super.subscribe = false});
+  RefQueryDefBuilder(
+    this.entityName,
+    super.name,
+    this.attrs, {
+    super.subscribe = false,
+  });
+
+  final String entityName;
 
   /// List of attribute names to include in the query.
   final List<String> attrs;
@@ -271,7 +297,7 @@ class RefQueryDefBuilder extends ViewQueryDefBuilder {
     }
 
     return RefQueryDef(
-      query: QueryDef(subqueryViews),
+      query: QueryDef(entityName, subqueryViews),
       subscribe: subscribe,
       attrs: attrs,
     );
@@ -286,12 +312,15 @@ class RefQueryDefBuilder extends ViewQueryDefBuilder {
 class ListQueryDefBuilder extends ViewQueryDefBuilder {
   /// Creates a list query builder with attributes and pagination.
   ListQueryDefBuilder(
+    this.entityName,
     super.name,
     this.attrs, {
     super.subscribe = false,
     this.startAt = 0,
     this.length = 0,
   });
+
+  final String entityName;
 
   /// List of attribute names to include for each item.
   final List<String> attrs;
@@ -315,7 +344,7 @@ class ListQueryDefBuilder extends ViewQueryDefBuilder {
     }
 
     return ListQueryDef(
-      query: QueryDef(queryViews),
+      query: QueryDef(entityName, queryViews),
       attrs: attrs,
       subscribe: subscribe,
       startAt: startAt,
@@ -339,22 +368,24 @@ extension QueryDefBuilderManual on QueryDefBuilder {
 
   /// Adds a reference view query with nested builder configuration.
   void ref(
+    String entityName,
     String name,
     List<String> attrs,
     void Function(RefQueryDefBuilder qb) fun,
   ) {
-    var qb = RefQueryDefBuilder(name, attrs);
+    final qb = RefQueryDefBuilder(entityName, name, attrs);
     fun(qb);
     add(qb);
   }
 
   /// Adds a list view query with nested builder configuration.
   void list(
+    String entityName,
     String name,
     List<String> attrs,
     void Function(ListQueryDefBuilder qb) fun,
   ) {
-    var qb = ListQueryDefBuilder(name, attrs);
+    final qb = ListQueryDefBuilder(entityName, name, attrs);
     fun(qb);
     add(qb);
   }

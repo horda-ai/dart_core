@@ -233,6 +233,7 @@ final class ReplyClient {
 class ChangeEnvelop {
   /// Creates a change envelope with view modification data.
   ChangeEnvelop({
+    required this.entityName,
     required this.changeId,
     required this.key,
     required this.name,
@@ -251,6 +252,7 @@ class ChangeEnvelop {
   ///
   /// Used for building changes before they are committed to the message system.
   ChangeEnvelop.draft({
+    required this.entityName,
     required this.key,
     required this.name,
     required this.changes,
@@ -268,12 +270,18 @@ class ChangeEnvelop {
   ///
   /// Used when a view has no changes to project but should be marked as ready
   /// for client synchronization. Only used by the server and never persisted.
-  ChangeEnvelop.empty({required this.key, required this.name})
-    : changeId = '',
-      changes = <Change>[];
+  ChangeEnvelop.empty({
+    required this.entityName,
+    required this.key,
+    required this.name,
+  }) : changeId = '',
+       changes = <Change>[];
 
   /// Message ID assigned when this envelope was persisted to the message system.
   final String changeId;
+
+  /// Name of the entity that owns the view being modified.
+  final String entityName;
 
   /// Entity ID or attribute ID that owns the view being changed.
   final String key;
@@ -308,7 +316,11 @@ class ChangeEnvelop {
     final changesJson = json['changes'] as List;
 
     if (changesJson.isEmpty) {
-      return ChangeEnvelop.empty(key: json['aid'], name: name);
+      return ChangeEnvelop.empty(
+        entityName: json['entityName'],
+        key: json['aid'],
+        name: name,
+      );
     }
 
     for (final changeJson in changesJson) {
@@ -328,6 +340,7 @@ class ChangeEnvelop {
 
     return ChangeEnvelop(
       changeId: json['chid'],
+      entityName: json['entityName'],
       key: json['aid'],
       name: name,
       changes: deserializedChanges,
@@ -354,6 +367,7 @@ class ChangeEnvelop {
 
     final map = {
       'chid': changeId,
+      'entityName': entityName,
       'aid': key,
       'changes': changesJson,
       'view': name,

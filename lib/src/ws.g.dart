@@ -37,6 +37,7 @@ Map<String, dynamic> _$QueryResultWsMsgToJson(QueryResultWsMsg instance) =>
     <String, dynamic>{'result': QueryResultWsMsg._resToJson(instance.result)};
 
 ActorViewSub _$ActorViewSubFromJson(Map<String, dynamic> json) => ActorViewSub(
+  json['entityName'] as String,
   json['id'] as String,
   json['name'] as String,
   json['ver'] as String,
@@ -44,6 +45,7 @@ ActorViewSub _$ActorViewSubFromJson(Map<String, dynamic> json) => ActorViewSub(
 
 Map<String, dynamic> _$ActorViewSubToJson(ActorViewSub instance) =>
     <String, dynamic>{
+      'entityName': instance.entityName,
       'id': instance.id,
       'name': instance.name,
       'ver': instance.changeId,
